@@ -1,6 +1,6 @@
-# Lotteligence
+# Lottelligence
 
-**Lotteligence** ir Flask tīmekļa prototips (Python), kas analizē **Eurojackpot** un **Viking Lotto** vēsturiskos izložu datus, tos normalizē, palaiž vairākus mašīnmācīšanās modeļus un salīdzina to sniegumu pēc varbūtību un “top‑K” metriku rādītājiem
+**Lottelligence** ir Flask tīmekļa prototips (Python), kas analizē **Eurojackpot** un **Viking Lotto** vēsturiskos izložu datus, tos normalizē, palaiž vairākus mašīnmācīšanās modeļus un salīdzina to sniegumu pēc varbūtību un “top‑K” metriku rādītājiem
 
 Šis rīks nav paredzēts nākamo izložu prognozēšanai. Tas ir **eksperimentu un pētījuma prototips**, kura mērķis ir pārbaudīt:
 
@@ -180,7 +180,7 @@ Parāda, cik bieži patiesie pamat skaitļi ir starp 10 visaugstāk novērtētaj
 ## Projekta struktūra
 
 ```text
-Lotteligence/
+Lottelligence/
 ├─ app/
 │  ├─ __init__.py               # Flask lietotnes izveide (create_app) un konfigurācija
 │  ├─ routes.py                 # Flask maršruti un tīmekļa loģika
@@ -231,7 +231,7 @@ Lotteligence/
 
 1. Pāriet uz projekta mapi: 
 
-cd Lotteligence
+cd Lottelligence
 
 2. (Pēc izvēles) Izveidot un aktivizēt virtuālo vidi:
 
