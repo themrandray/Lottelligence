@@ -1,5 +1,16 @@
 # Lottelligence
 
+![Python](https://img.shields.io/badge/Python-3.10-blue)
+![Flask](https://img.shields.io/badge/Flask-Web%20App-black)
+![ML](https://img.shields.io/badge/Machine%20Learning-Experiment-orange)
+![Status](https://img.shields.io/badge/status-research%20prototype-green)
+
+## Interfeisa piemērs
+
+<p align="center">
+  <img src="docs/lottelligence-ui.png" width="900">
+</p>
+
 **Lottelligence** ir Flask tīmekļa prototips (Python), kas analizē **Eurojackpot** un **Viking Lotto** vēsturiskos izložu datus, tos normalizē, palaiž vairākus mašīnmācīšanās modeļus un salīdzina to sniegumu pēc varbūtību un “top‑K” metriku rādītājiem
 
 Šis rīks nav paredzēts nākamo izložu prognozēšanai. Tas ir **eksperimentu un pētījuma prototips**, kura mērķis ir pārbaudīt:
@@ -210,6 +221,29 @@ Lottelligence/
 ├─ outputs/                     # ģenerētie CSV rezultāti (lokāli)
 ├─ requirements.txt             # nepieciešamās Python bibliotēkas   
 └─ run.py                       # Flask palaišana
+```
+
+---
+
+## Sistēmas arhitektūra
+
+```text
+Lietotājs (pārlūks)
+        │
+        ▼
+Flask interfeiss (`routes.py`, `index.html`)
+        │
+        ▼
+Datu ielāde un normalizācija (`dataset.py`)
+        │
+        ▼
+Eksperimentu loģika (`experiment.py`)
+        │
+        ▼
+Modeļi un prognožu varbūtības (`models.py`)
+        │
+        ▼
+Metriku aprēķins un rezultātu attēlošana
 ```
 
 ---
