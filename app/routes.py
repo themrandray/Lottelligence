@@ -1,8 +1,9 @@
+import pandas as pd
 # Flask komponentes:
 # - Blueprint: ļauj sadalīt maršrutus pa moduļiem
 # - render_template: ielādē HTML veidnes
 # - request: nolasa formu datus un augšupielādētos failus
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, jsonify
 
 # Pathlib nodrošina ērtu un drošu darbu ar failu ceļiem (platformneatkarīgi)
 from pathlib import Path
@@ -13,7 +14,7 @@ from datetime import datetime
 # Projekta servisi datu apstrādei:
 # - read_table: nolasa CSV/XLSX failu pandas DataFrame formātā
 # - normalize_any: normalizē datus un pārbauda loterijas tipu
-from .services.dataset import read_table, normalize_any
+from .services.dataset import read_table, normalize_any, get_top_numbers, get_top_combinations
 
 # Eksperimentu izpilde (modeļi, prognozes utt.)
 from .services.experiment import run_experiment
@@ -27,6 +28,7 @@ def index():
         "index.html",
         error=None,
         results=None,
+        last_uploaded_file=None,
         form_state={
             "lottery": "viking",
             "file_format": "raw",
@@ -40,7 +42,7 @@ def run():
     # Apstrādā augšupielādēto failu un palaiž eksperimentu
     error = None
     results = None
-
+    last_uploaded_file = None
     # Nolasa formā ievadītos parametrus
     lottery = request.form.get("lottery", "viking")
     file_format = request.form.get("file_format", "raw")
@@ -63,37 +65,44 @@ def run():
             "index.html",
             error=error,
             results=None,
+            last_uploaded_file=last_uploaded_file,
             form_state=form_state,
             status="idle",
         )
 
-    # Pārbauda, vai fails ir augšupielādēts
-    file = request.files.get("dataset")
-    if not file or file.filename == "":
-        error = "Lūdzu augšupielādējiet datu failu"
-        return render_template(
-            "index.html",
-            error=error,
-            results=None,
-            form_state=form_state,
-            status="idle",
-        )
-
-    # Saglabā failu lokāli
     upload_dir = Path(main_bp.root_path).resolve().parent / "uploads"
     upload_dir.mkdir(parents=True, exist_ok=True)
 
-    safe_name = file.filename.replace(" ", "_")
-    saved_path = upload_dir / safe_name
-    file.save(saved_path)
+    outputs_dir = Path(main_bp.root_path).resolve().parent / "outputs"
+    normalized_latest_path = outputs_dir / "normalized_latest.csv"
+
+    file = request.files.get("dataset")
+    df_norm = None
 
     try:
-        # Nolasa failu ar pandas
-        df_raw = read_table(saved_path)
+        if file and file.filename != "":
+            safe_name = file.filename.replace(" ", "_")
+            last_uploaded_file = safe_name
+            saved_path = upload_dir / safe_name
+            file.save(saved_path)
 
-        # Normalizē datus un pārbauda loterijas tipu
-        df_norm = normalize_any(df_raw, lottery=lottery, file_format=file_format)
+            df_raw = read_table(saved_path)
+            df_norm = normalize_any(df_raw, lottery=lottery, file_format=file_format)
 
+        elif normalized_latest_path.exists():
+            df_norm = read_table(normalized_latest_path)
+
+        else:
+            error = "Lūdzu augšupielādējiet datu failu"
+            return render_template(
+                "index.html",
+                error=error,
+                results=None,
+                last_uploaded_file=last_uploaded_file,
+                form_state=form_state,
+                status="idle",
+            )
+        
         # Palaiž eksperimentu
         results = run_experiment(df_norm, lottery=lottery, window=window)
 
@@ -110,9 +119,109 @@ def run():
         "index.html",
         error=error,
         results=results,
+        last_uploaded_file=last_uploaded_file,
         form_state=form_state,
         status=status,
     )
+
+@main_bp.route("/top-numbers-api", methods=["POST"])
+def top_numbers_api():
+    outputs_dir = Path(main_bp.root_path).resolve().parent / "outputs"
+    normalized_latest_path = outputs_dir / "normalized_latest.csv"
+
+    if not normalized_latest_path.exists():
+        return jsonify({
+            "ok": False,
+            "error": "Nav saglabātu normalizētu datu. Vispirms palaidiet eksperimentu."
+        })
+
+    try:
+        df_norm = read_table(normalized_latest_path)
+        top_k = request.form.get("top_k", "5")
+
+        try:
+            top_k = int(top_k)
+            if top_k < 1:
+                top_k = 1
+            elif top_k > 10:
+                top_k = 10
+        except ValueError:
+            top_k = 5
+
+        top_numbers = get_top_numbers(df_norm, k=top_k)
+
+        has_n6 = "n6" in df_norm.columns and df_norm["n6"].notna().any()
+        analysis_label = "Viking Lotto" if has_n6 else "Eurojackpot"
+
+        return jsonify({
+            "ok": True,
+            "analysis_label": analysis_label,
+            "top_numbers": [
+                {"number": number, "freq": freq}
+                for number, freq in top_numbers
+            ]
+        })
+
+    except Exception as exc:
+        return jsonify({
+            "ok": False,
+            "error": str(exc)
+        })
+
+@main_bp.route("/top-combinations-api", methods=["POST"])
+def top_combinations_api():
+    outputs_dir = Path(main_bp.root_path).resolve().parent / "outputs"
+    normalized_latest_path = outputs_dir / "normalized_latest.csv"
+
+    if not normalized_latest_path.exists():
+        return jsonify({
+            "ok": False,
+            "error": "Nav saglabātu normalizētu datu. Vispirms palaidiet eksperimentu."
+        })
+
+    try:
+        df_norm = read_table(normalized_latest_path)
+
+        comb_size = request.form.get("comb_size", "2")
+        top_k = request.form.get("top_k", "5")
+
+        try:
+            comb_size = int(comb_size)
+            if comb_size < 2:
+                comb_size = 2
+            elif comb_size > 4:
+                comb_size = 4
+        except ValueError:
+            comb_size = 2
+
+        try:
+            top_k = int(top_k)
+            if top_k < 1:
+                top_k = 1
+            elif top_k > 10:
+                top_k = 10
+        except ValueError:
+            top_k = 5
+
+        top_combinations = get_top_combinations(df_norm, comb_size=comb_size, top_k=top_k)
+
+        has_n6 = "n6" in df_norm.columns and df_norm["n6"].notna().any()
+        analysis_label = "Viking Lotto" if has_n6 else "Eurojackpot"
+
+        return jsonify({
+            "ok": True,
+            "analysis_label": analysis_label,
+            "top_combinations": [
+                {"combo": list(combo), "freq": freq}
+                for combo, freq in top_combinations
+            ]
+        })
+
+    except Exception as exc:
+        return jsonify({
+            "ok": False,
+            "error": str(exc)
+        })
 
 def _timestamp():
     # Izveido laika zīmogu vēstures ierakstiem (datums + laiks milisekundēs)
@@ -126,7 +235,6 @@ def _save_outputs(df_norm, results, lottery, window):
     # - results_history.csv (visu skrējienu vēsture)
 
     from flask import current_app
-    import pandas as pd
 
     outputs_dir = current_app.config["OUTPUTS_DIR"]
 

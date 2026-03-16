@@ -7,7 +7,7 @@ body {
 }
 
 .page-container {
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -27,7 +27,7 @@ h1 {
 .grid-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 180px 1fr;
+    grid-template-rows: auto 1fr;
     gap: 1px;
     height: calc(100vh - 80px);
 }
@@ -230,7 +230,7 @@ th {
 .form-row {
     display: flex;
     gap: 20px;
-    align-items: flex-end; /* izlīdzina elementu apakšas vienā līmenī */
+    align-items: flex-start; /* izlīdzina elementu apakšas vienā līmenī */
 }
 
 /* Poga zem otrā lauka (Loterijas tips) */
@@ -238,7 +238,7 @@ th {
     display: flex;
     justify-content: flex-start; /* poga pa kreisi */
     margin-left: calc(100% / 3); /* nobīde tieši zem otrā bloka */
-    margin-top: 8px;
+    margin-top: 20px;
 }
 
 .form-row .form-group {
@@ -260,4 +260,143 @@ th {
     color: #d4ba71;                 /* nedaudz spilgtāks zelts */
     text-shadow: 0 0 6px #ffd86b;   /* zeltains mirdzums ap burtiem */
     cursor: pointer;
+}
+
+/* ===== Panelis 2: iekšējais sadalījums kreisā / labā daļa ===== */
+.top-right-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.panel-half {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.panel-half-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.panel-half-header h2 {
+    margin: 0 !important;
+    text-align: left !important;
+}
+
+.extra-analysis-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.extra-analysis-actions button {
+    width: fit-content;
+    min-width: 200px;
+    text-align: center;
+    align-self: flex-start;
+}
+
+/* Ja logs šaurāks, tad abi bloki atkal viens zem otra */
+@media (max-width: 1100px) {
+    .top-right-split {
+        grid-template-columns: 1fr;
+    }
+}
+
+.analysis-result {
+    min-height: 180px;
+}
+
+
+/* Papildu stils diagrammai un leģendai */
+
+/* Konteiners grafikam un leģendai */
+.chart-flex {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    height: 350px;
+}
+
+/* Leģenda labajā pusē */
+.legend-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 20px;
+    margin-top: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 15px;
+    color: #c6c494;
+    cursor: pointer;
+}
+
+.legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    margin-right: 8px;
+}
+
+/* Labākā modeļa apgaismojums */
+.legend-best {
+    font-weight: 700;
+    font-size: 17px;
+    color: #ffffff;
+}
+
+/* Dubultā tabula */
+.double-table {
+    margin-bottom: 25px;
+}
+
+.double-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+
+.double-table th, .double-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #444;
+    color: #c6c494;
+    text-align: left;
+}
+
+.double-table th {
+    font-weight: 700;
+    color: #e0dfc7;
+}
+
+#metric-toggles {
+    text-align:center;
+    margin-bottom: 10px;
+}
+
+.last-file-info {
+    margin: 6px 0 0 0;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.top-right-split .panel-half:last-child {
+    padding-left: 74px;
+}
+
+.panel-half-header .status-bar {
+    position: relative;
+    left: 56px;
 }

@@ -9,74 +9,6 @@
 
     <!-- Chart.js bibliotēka -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Papildu stils diagrammai un leģendai -->
-    <style>
-        /* Konteiners grafikam un leģendai */
-        .chart-flex {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: flex-start;
-            width: 100%;
-            height: 350px;
-        }
-
-        /* Leģenda labajā pusē */
-        .legend-box {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            margin-left: 20px;
-            margin-top: 10px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 6px;
-            font-size: 15px;
-            color: #c6c494;
-            cursor: pointer;
-        }
-
-        .legend-color {
-            width: 14px;
-            height: 14px;
-            border-radius: 3px;
-            margin-right: 8px;
-        }
-
-        /* Labākā modeļa apgaismojums */
-        .legend-best {
-            font-weight: 700;
-            font-size: 17px;
-            color: #ffffff;
-        }
-
-        /* Dubultā tabula */
-        .double-table {
-            margin-bottom: 25px;
-        }
-
-        .double-table table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-        }
-
-        .double-table th, .double-table td {
-            padding: 6px 8px;
-            border-bottom: 1px solid #444;
-            color: #c6c494;
-            text-align: left;
-        }
-
-        .double-table th {
-            font-weight: 700;
-            color: #e0dfc7;
-        }
-    </style>
 </head>
 
 <body>
@@ -99,71 +31,133 @@
 
     <!-- Galvenais 2x2 režģis -->
     <main class="grid-container">
+            <!-- ===================== Panelis 1 ===================== -->
+            <section class="card compact">
+                <form id="main-run-form" action="{{ url_for('main.run') }}" method="post" enctype="multipart/form-data">
+                    <h2>Datu ielāde un eksperimenta uzstādījumi</h2>
 
-        <!-- ===================== Panelis 1 ===================== -->
-        <section class="card compact">
-            <h2>Datu ielāde un eksperimenta uzstādījumi</h2>
+                        <!-- Trīs elementi vienā rindā -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dataset-input">Datu fails (CSV vai XLSX)</label>
+                                <label class="file-upload">
+                                    <span id="file-label">Izvēlēties failu</span>
+                                    <input type="file" name="dataset" id="dataset-input">
+                                </label>
+                            </div>
 
-            <form action="{{ url_for('main.run') }}" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="lottery">Loterijas tips</label>
+                                <select id="lottery" name="lottery">
+                                    <option value="viking" {% if form_state.lottery == 'viking' %}selected{% endif %}>Viking Lotto</option>
+                                    <option value="euro" {% if form_state.lottery == 'euro' %}selected{% endif %}>Eurojackpot</option>
+                                </select>
+                            </div>
 
-                <!-- Trīs elementi vienā rindā -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="dataset">Datu fails (CSV vai XLSX)</label>
-                        <label class="file-upload">
-                            <span id="file-label">Izvēlēties failu</span>
-                            <input type="file" name="dataset" id="dataset-input">
-                        </label>
+                            <div class="form-group">
+                                <label for="file_format">Faila formāts</label>
+                                <select id="file_format" name="file_format">
+                                    <option value="raw" {% if form_state.file_format == 'raw' %}selected{% endif %}>RAW LatLoto</option>
+                                    <option value="prepared" {% if form_state.file_format == 'prepared' %}selected{% endif %}>Apstrādāts</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <p class="last-file-info">
+                            {% if last_uploaded_file %}
+                                Pēdējais ielādētais fails: {{ last_uploaded_file }}
+                            {% else %}
+                                &nbsp;
+                            {% endif %}
+                        </p>
+
+                        <!-- Poga zem rindas -->
+                        <div class="form-actions">
+                            <button type="submit" name="action" value="run">Palaist eksperimentu</button>
+                        </div>
+                </form>        
+            </section>
+
+                    <!-- ===================== Panelis 2 ===================== -->
+            <section class="card compact">
+                <div class="top-right-split">
+
+                    <!-- Kreisā daļa -->
+                    <div class="panel-half">
+                        <div class="panel-half-header">
+                            <h2>Modeļi un statuss</h2>
+
+                            <div class="status-bar">
+                                <span class="status-label">Statuss:</span>
+
+                                {% if status == 'done' %}
+                                    <span class="status-dot status-done"></span>
+                                    <span class="status-text">Pabeigts</span>
+                                {% else %}
+                                    <span class="status-dot status-idle"></span>
+                                    <span class="status-text">Gaida</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <p>Eksperiments izmanto trīs modeļus:</p>
+                        <ul>
+                            <li>Logistiskā regresija (SGDClassifier)</li>
+                            <li>RandomForestClassifier</li>
+                            <li>XGBoost / GradientBoosting</li>
+                        </ul>
                     </div>
 
-                    <div class="form-group">
-                        <label for="lottery">Loterijas tips</label>
-                        <select id="lottery" name="lottery">
-                            <option value="viking" {% if form_state.lottery == 'viking' %}selected{% endif %}>Viking Lotto</option>
-                            <option value="euro" {% if form_state.lottery == 'euro' %}selected{% endif %}>Eurojackpot</option>
-                        </select>
+                    <!-- Labā daļa -->
+                    <div class="panel-half">
+                        <div class="panel-half-header">
+                            <h2>Papildu analīze</h2>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="top-k-select">Cik skaitļus rādīt</label>
+                            <select id="top-k-select">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5" selected>5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+                        
+                        <div class="field-group">
+                            <label for="comb-size-select">Kombinācijas izmērs</label>
+                            <select id="comb-size-select">
+                                <option value="2" selected>2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                            </select>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="comb-top-k-select">Cik kombinācijas rādīt</label>
+                            <select id="comb-top-k-select">
+                                <option value="5" selected>5</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+
+                        <div class="extra-analysis-actions">
+                            <button type="button" id="top-numbers-btn">Biežākie skaitļi</button>
+                            <button type="button" id="top-combinations-btn">Biežākās kombinācijas</button>
+                        </div>
+                     
+                    <div class="analysis-result" id="analysis-result-box"></div>
+                        
                     </div>
 
-                    <div class="form-group">
-                        <label for="file_format">Faila formāts</label>
-                        <select id="file_format" name="file_format">
-                            <option value="raw" {% if form_state.file_format == 'raw' %}selected{% endif %}>RAW LatLoto</option>
-                            <option value="prepared" {% if form_state.file_format == 'prepared' %}selected{% endif %}>Apstrādāts</option>
-                        </select>
-                    </div>
                 </div>
-
-                <!-- Poga zem rindas -->
-                <div class="form-actions">
-                    <button type="submit">Palaist eksperimentu</button>
-                </div>
-
-            </form>
-        </section>
-
-        <!-- ===================== Panelis 2 ===================== -->
-        <section class="card compact">
-            <h2>Modeļi un statuss</h2>
-
-            <div class="status-bar status-top-right">
-                <span class="status-label">Statuss:</span>
-
-                {% if status == 'done' %}
-                    <span class="status-dot status-done"></span>
-                    <span class="status-text">Pabeigts</span>
-                {% else %}
-                    <span class="status-dot status-idle"></span>
-                    <span class="status-text">Gaida</span>
-                {% endif %}
-            </div>
-
-            <p>Eksperiments izmanto trīs modeļus:</p>
-            <ul>
-                <li>Logistiskā regresija (SGDClassifier)</li>
-                <li>RandomForestClassifier</li>
-                <li>XGBoost / GradientBoosting</li>
-            </ul>
-        </section>
+            </section>
 
         <!-- ===================== Panelis 3: Rezultātu tabulas ===================== -->
         <section class="card">
@@ -245,7 +239,7 @@
         <section class="card">
             <h2>Diagrammas un salīdzinājums</h2>
 
-            <div id="metric-toggles" style="text-align:center; margin-bottom:10px;">
+            <div id="metric-toggles">
                 <label><input type="checkbox" checked onclick="toggleMetric(0)"> LogLoss</label>
                 <label><input type="checkbox" checked onclick="toggleMetric(1)"> Brier</label>
                 <label><input type="checkbox" checked onclick="toggleMetric(2)"> hit@K_main</label>
@@ -383,6 +377,89 @@ document.addEventListener("DOMContentLoaded", function () {
                 : "Izvēlēties failu";
         });
     }
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("top-numbers-btn");
+    const topKSelect = document.getElementById("top-k-select");
+    const combBtn = document.getElementById("top-combinations-btn");
+    const combSizeSelect = document.getElementById("comb-size-select");
+    const combTopKSelect = document.getElementById("comb-top-k-select");
+    const resultBox = document.getElementById("analysis-result-box");
+
+    if (!btn || !resultBox || !topKSelect || !combBtn || !combSizeSelect || !combTopKSelect) return;
+    btn.addEventListener("click", async function () {
+        resultBox.innerHTML = "<p>Notiek analīze...</p>";
+
+        try {
+            const formData = new FormData();
+            formData.append("top_k", topKSelect.value);
+
+            const response = await fetch("/top-numbers-api", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!data.ok) {
+                resultBox.innerHTML = `<p>${data.error}</p>`;
+                return;
+            }
+
+            let html = `<h3>Skaitļu rezultāts</h3>`;
+            html += `<p class="analysis-source">Analizētie dati: ${data.analysis_label}</p>`;
+            html += `<ul>`;
+
+            for (const item of data.top_numbers) {
+                html += `<li>${item.number} — ${item.freq} reizes</li>`;
+            }
+
+            html += `</ul>`;
+            resultBox.innerHTML = html;
+
+        } catch (error) {
+            resultBox.innerHTML = "<p>Neizdevās iegūt analīzes rezultātu.</p>";
+        }
+    });
+
+    combBtn.addEventListener("click", async function () {
+        resultBox.innerHTML = "<p>Notiek analīze...</p>";
+
+        try {
+            const formData = new FormData();
+            formData.append("comb_size", combSizeSelect.value);
+            formData.append("top_k", combTopKSelect.value);
+
+            const response = await fetch("/top-combinations-api", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!data.ok) {
+                resultBox.innerHTML = `<p>${data.error}</p>`;
+                return;
+            }
+
+            let html = `<h3>Kombināciju rezultāts</h3>`;
+            html += `<p class="analysis-source">Analizētie dati: ${data.analysis_label}</p>`;
+            html += `<ul>`;
+
+            for (const item of data.top_combinations) {
+                html += `<li>${item.combo.join(", ")} — ${item.freq} reizes</li>`;
+            }
+
+            html += `</ul>`;
+            resultBox.innerHTML = html;
+
+        } catch (error) {
+            resultBox.innerHTML = "<p>Neizdevās iegūt kombināciju rezultātu.</p>";
+        }
+    });
 });
 </script>
 

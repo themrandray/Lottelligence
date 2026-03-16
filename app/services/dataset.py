@@ -1,5 +1,6 @@
 import pandas as pd
 from pathlib import Path
+from itertools import combinations
 
 # Definēju kolonnas, kas raksturīgas LatLoto RAW formātam
 # Tas palīdz saprast, ka fails ir RAW un pirms izmantošanas tas jāapstrādā īpašā veidā
@@ -223,3 +224,42 @@ def _validate_lottery_safety(df_norm: pd.DataFrame, lottery: str):
 
     else:
         raise ValueError("Nezināms loterijas tips")
+    
+def get_top_numbers(df_norm, k=5):
+
+    counts = {}
+
+    for _, row in df_norm.iterrows():
+        nums = [row["n1"], row["n2"], row["n3"], row["n4"], row["n5"], row["n6"]]
+
+        for n in nums:
+            if pd.isna(n):
+                continue
+
+            n = int(n)
+            counts[n] = counts.get(n, 0) + 1
+
+    sorted_counts = sorted(counts.items(), key=lambda item: item[1], reverse=True)
+
+    return sorted_counts[:k]
+
+def get_top_combinations(df_norm, comb_size=2, top_k=5):
+    counts = {}
+
+    for _, row in df_norm.iterrows():
+        nums = [row["n1"], row["n2"], row["n3"], row["n4"], row["n5"], row["n6"]]
+        clean_nums = []
+
+        for n in nums:
+            if pd.isna(n):
+                continue
+            clean_nums.append(int(n))
+
+        if len(clean_nums) < comb_size:
+            continue
+
+        for combo in combinations(sorted(clean_nums), comb_size):
+            counts[combo] = counts.get(combo, 0) + 1
+
+    sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+    return sorted_counts[:top_k]
