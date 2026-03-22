@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Lottelligence</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.png') }}">
 
     <!-- Galvenais stils -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -39,7 +41,7 @@
                         <!-- Trīs elementi vienā rindā -->
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="dataset-input">Datu fails (CSV vai XLSX)</label>
+                                <label for="dataset-input">Datu fails (CSV/XLSX)</label>
                                 <label class="file-upload">
                                     <span id="file-label">Izvēlēties failu</span>
                                     <input type="file" name="dataset" id="dataset-input">
@@ -59,6 +61,18 @@
                                 <select id="file_format" name="file_format">
                                     <option value="raw" {% if form_state.file_format == 'raw' %}selected{% endif %}>RAW LatLoto</option>
                                     <option value="prepared" {% if form_state.file_format == 'prepared' %}selected{% endif %}>Apstrādāts</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="split_ratio">Datu sadalījums</label>
+                                <select id="split_ratio" name="split_ratio">
+                                    <option value="50_50" {% if form_state.split_ratio == '50_50' %}selected{% endif %}>50/50</option>
+                                    <option value="55_45" {% if form_state.split_ratio == '55_45' %}selected{% endif %}>55/45</option>
+                                    <option value="60_40" {% if form_state.split_ratio == '60_40' %}selected{% endif %}>60/40</option>
+                                    <option value="65_35" {% if form_state.split_ratio == '65_35' %}selected{% endif %}>65/35</option>
+                                    <option value="70_30" {% if form_state.split_ratio == '70_30' %}selected{% endif %}>70/30</option>
+                                    <option value="75_25" {% if form_state.split_ratio == '75_25' %}selected{% endif %}>75/25</option>
+                                    <option value="80_20" {% if form_state.split_ratio == '80_20' %}selected{% endif %}>80/20</option>
                                 </select>
                             </div>
                         </div>
@@ -197,6 +211,7 @@
                         <tr>
                             <th>Modelis</th>
                             <th>K_main</th>
+                            <th>Split</th>
                             <th>Treniņa rindas</th>
                             <th>Testa rindas</th>
                             <th>Treniņš no</th>
@@ -210,6 +225,7 @@
                         <tr>
                             <td>{{ row.model }}</td>
                             <td>{{ row.K_main or row.k_main }}</td>
+                            <td>{{ row.split_ratio }}</td>
                             <td>{{ row.train_rows }}</td>
                             <td>{{ row.test_rows }}</td>
 

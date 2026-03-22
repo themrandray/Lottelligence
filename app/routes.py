@@ -33,6 +33,7 @@ def index():
             "lottery": "viking",
             "file_format": "raw",
             "window": "1",
+            "split_ratio": "70_30",
         },
         status="idle",
     )
@@ -47,11 +48,13 @@ def run():
     lottery = request.form.get("lottery", "viking")
     file_format = request.form.get("file_format", "raw")
     window_str = request.form.get("window", "1")
+    split_ratio = request.form.get("split_ratio", "70_30")
 
     form_state = {
         "lottery": lottery,
         "file_format": file_format,
         "window": window_str,
+        "split_ratio": split_ratio,
     }
 
     # Validē loga parametru
@@ -104,7 +107,12 @@ def run():
             )
         
         # Palaiž eksperimentu
-        results = run_experiment(df_norm, lottery=lottery, window=window)
+        results = run_experiment(
+            df_norm,
+            lottery,
+            window=window,
+            split_ratio=split_ratio
+        )
 
         # Saglabā rezultātus
         _save_outputs(df_norm, results, lottery, window)

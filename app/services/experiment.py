@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", message=".*matmul.*", category=RuntimeWarning)
 # Modeļu būvēšana un prognozēšana
 from .models import build_logreg_sgd, build_random_forest, build_xgboost_like, fit_and_predict
 
-def run_experiment(df_norm: pd.DataFrame, lottery: str, window: int = 1):
+def run_experiment(df_norm: pd.DataFrame, lottery: str, window: int = 1, split_ratio: str = "70_30"):
     # Izpilda eksperimentu ar trim modeļiem (LogReg, RandomForest, XGBoost-like)
     # Izmanto lagged features: prev_vec -> curr_vec
     # Atgriež metrikas un informāciju par treniņu/testu periodiem
@@ -36,8 +36,20 @@ def run_experiment(df_norm: pd.DataFrame, lottery: str, window: int = 1):
     if n < 10:
         raise ValueError("Nepietiek datu pēc lagged apstrādes (vajag vismaz 10 rindas)")
 
-    # 70% treniņam, 30% testam
-    split_idx = int(n * 0.7)
+    # % treniņam, % testam
+    split_map = {
+        "50_50": 0.50,
+        "55_45": 0.55,
+        "60_40": 0.60,
+        "65_35": 0.65,
+        "70_30": 0.70,
+        "75_25": 0.75,
+        "80_20": 0.80,
+    }
+
+    train_ratio = split_map.get(split_ratio, 0.70)
+
+    split_idx = int(n * train_ratio)
     train = df_feat.iloc[:split_idx]
     test = df_feat.iloc[split_idx:]
 
@@ -90,6 +102,7 @@ def run_experiment(df_norm: pd.DataFrame, lottery: str, window: int = 1):
             "test_date_from": test_date_from,
             "test_date_to": test_date_to,
             "window": int(window),
+            "split_ratio": split_ratio,
         }
         results.append(res)
 
