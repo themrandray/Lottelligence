@@ -83,7 +83,7 @@ def run():
     df_norm = None
 
     try:
-        if file and file.filename != "":
+        if file and file.filename:
             safe_name = file.filename.replace(" ", "_")
             last_uploaded_file = safe_name
             saved_path = upload_dir / safe_name

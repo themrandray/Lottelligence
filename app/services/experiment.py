@@ -54,10 +54,10 @@ def run_experiment(df_norm: pd.DataFrame, lottery: str, window: int = 1, split_r
     test = df_feat.iloc[split_idx:]
 
     # Sagatavo X un Y matricas
-    X_train = np.stack(train["prev_vec"].values)
-    Y_train = np.stack(train["curr_vec"].values)
-    X_test = np.stack(test["prev_vec"].values)
-    Y_test = np.stack(test["curr_vec"].values)
+    X_train = np.stack(train["prev_vec"].tolist())
+    Y_train = np.stack(train["curr_vec"].tolist())
+    X_test = np.stack(test["prev_vec"].tolist())
+    Y_test = np.stack(test["curr_vec"].tolist())
 
     # Datumu diapazoni (informatīvi)
     train_date_from = train["date"].min().date().isoformat()
