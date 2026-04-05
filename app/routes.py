@@ -17,7 +17,7 @@ from datetime import datetime
 from .services.dataset import read_table, normalize_any, get_top_numbers, get_top_combinations
 
 # Eksperimentu izpilde (modeļi, prognozes utt.)
-from .services.experiment import run_experiment
+from .services.experiment import run_experiment, summarize_experiment_results
 
 main_bp = Blueprint("main", __name__)
 
@@ -32,10 +32,10 @@ def index():
         form_state={
             "lottery": "viking",
             "file_format": "raw",
-            "window": "1",
             "split_ratio": "70_30",
         },
         status="idle",
+        best_summary=None,
     )
 
 @main_bp.route("/run", methods=["POST"])
@@ -44,34 +44,17 @@ def run():
     error = None
     results = None
     last_uploaded_file = None
+    best_summary = None
     # Nolasa formā ievadītos parametrus
     lottery = request.form.get("lottery", "viking")
     file_format = request.form.get("file_format", "raw")
-    window_str = request.form.get("window", "1")
     split_ratio = request.form.get("split_ratio", "70_30")
 
     form_state = {
         "lottery": lottery,
         "file_format": file_format,
-        "window": window_str,
         "split_ratio": split_ratio,
     }
-
-    # Validē loga parametru
-    try:
-        window = int(window_str)
-        if window <= 0:
-            raise ValueError
-    except ValueError:
-        error = "Loga parametrs ir jābūt pozitīvam veselam skaitlim"
-        return render_template(
-            "index.html",
-            error=error,
-            results=None,
-            last_uploaded_file=last_uploaded_file,
-            form_state=form_state,
-            status="idle",
-        )
 
     upload_dir = Path(main_bp.root_path).resolve().parent / "uploads"
     upload_dir.mkdir(parents=True, exist_ok=True)
@@ -110,12 +93,12 @@ def run():
         results = run_experiment(
             df_norm,
             lottery,
-            window=window,
             split_ratio=split_ratio
         )
+        best_summary = summarize_experiment_results(results)
 
         # Saglabā rezultātus
-        _save_outputs(df_norm, results, lottery, window)
+        _save_outputs(df_norm, results, lottery)
 
         status = "done"
 
@@ -130,6 +113,7 @@ def run():
         last_uploaded_file=last_uploaded_file,
         form_state=form_state,
         status=status,
+        best_summary=best_summary if results else None,
     )
 
 @main_bp.route("/top-numbers-api", methods=["POST"])
@@ -236,7 +220,7 @@ def _timestamp():
     now = datetime.now()
     return now.strftime("%Y-%m-%d %H:%M:%S.") + f"{int(now.microsecond / 1000):03d}"
 
-def _save_outputs(df_norm, results, lottery, window):
+def _save_outputs(df_norm, results, lottery):
     # Saglabā tikai trīs failus:
     # - normalized_latest.csv (pēdējais normalizētais datasets)
     # - results_latest.csv (pēdējie eksperimenta rezultāti)
@@ -258,7 +242,6 @@ def _save_outputs(df_norm, results, lottery, window):
     df_res_with_meta = df_res.copy()
     df_res_with_meta["timestamp"] = _timestamp()
     df_res_with_meta["lottery"] = lottery
-    df_res_with_meta["window"] = window
 
     if history_path.exists():
         df_old = pd.read_csv(history_path)

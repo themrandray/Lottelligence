@@ -224,7 +224,7 @@
                         {% for row in results %}
                         <tr>
                             <td>{{ row.model }}</td>
-                            <td>{{ row.K_main or row.k_main }}</td>
+                            <td>{{ row.k_main }}</td>
                             <td>{{ row.split_ratio }}</td>
                             <td>{{ row.train_rows }}</td>
                             <td>{{ row.test_rows }}</td>
@@ -241,10 +241,48 @@
 
             </div>
 
-            <div style="margin-top: 15px; font-size: 14px; color: #c6c494;">
+            <div class="results-note-box">
                 <p>* LogLoss un Brier ir kļūdas rādītāji - jo mazāks, jo labāk.</p>
                 <p>** hit@K_main un hit@10 ir trāpījumu rādītāji - jo lielāks, jo labāk.</p>
             </div>
+            
+                        {% if best_summary %}
+             <div class="best-summary-box">
+                <h3 class="best-summary-title">Labākais variants šajā eksperimentā</h3>
+
+                <p><strong>Kopējais uzvarētājs:</strong> <span class="best-summary-winner">{{ best_summary.best_overall.model }}</span></p>
+                <p><strong>Izmantotais split:</strong> {{ best_summary.best_overall.split_ratio }}</p>
+       
+                <p><strong>Labākais pēc LogLoss:</strong>
+                    {{ best_summary.best_by_metric.logloss.model }}
+                    ({{ "%.4f"|format(best_summary.best_by_metric.logloss.value) }})
+                </p>
+
+                <p><strong>Labākais pēc Brier:</strong>
+                    {{ best_summary.best_by_metric.brier.model }}
+                    ({{ "%.4f"|format(best_summary.best_by_metric.brier.value) }})
+                </p>
+
+                <p><strong>Labākais pēc hit@K_main:</strong>
+                    {{ best_summary.best_by_metric.hit_k_main.model }}
+                    ({{ "%.4f"|format(best_summary.best_by_metric.hit_k_main.value) }})
+                </p>
+
+                <p><strong>Labākais pēc hit@10:</strong>
+                    {{ best_summary.best_by_metric.hit_10.model }}
+                    ({{ "%.4f"|format(best_summary.best_by_metric.hit_10.value) }})
+                </p>
+
+                <p>
+                    <strong>Rangi:</strong>
+                    LogLoss rank: {{ best_summary.best_overall.metric_ranks.logloss }},
+                    Brier rank: {{ best_summary.best_overall.metric_ranks.brier }},
+                    hit@K_main rank: {{ best_summary.best_overall.metric_ranks.hit_k_main }},
+                    hit@10 rank: {{ best_summary.best_overall.metric_ranks.hit_10 }}
+                </p> 
+
+            </div>
+            {% endif %}
 
             {% else %}
             <p>Rezultātu vēl nav.</p>
@@ -273,6 +311,10 @@
     {{ results | tojson }}
 </script>
 
+<script id="best-summary-json" type="application/json">
+    {{ best_summary | tojson }}
+</script>
+
 <!-- Diagrammas loģika -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -289,28 +331,38 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
+    const bestSummaryEl = document.getElementById("best-summary-json");
+    let bestSummary = null;
+
+    try {
+        bestSummary = bestSummaryEl
+            ? JSON.parse(bestSummaryEl.textContent || "null")
+            : null;
+    } catch (e) {
+        console.error("Best summary JSON kļūda:", e);
+        bestSummary = null;
+    }
+
     if (!results.length) return;
 
-    /* 2) Atrod labāko modeli (pēc mazākā LogLoss) */
-    const bestModel = results.reduce((best, r) =>
-        r.logloss < best.logloss ? r : best
-    );
+    /* 2) Atrod kopējo labāko modeli */
+    const bestModelName = bestSummary?.best_overall?.model || null;
 
     /* 3) Sagatavo datus diagrammai */
     const labels = results.map(r => r.model);
 
-    function colorFor(model, baseColor) {
-        return model === bestModel.model
+       function colorFor(model, baseColor) {
+        return model === bestModelName
             ? baseColor.replace("0.5", "0.9")
             : baseColor;
     }
 
     function borderFor(model) {
-        return model === bestModel.model ? "#ffffff" : "rgba(0,0,0,0)";
+        return model === bestModelName ? "#ffffff" : "rgba(0,0,0,0)";
     }
 
     function borderWidthFor(model) {
-        return model === bestModel.model ? 3 : 1;
+        return model === bestModelName ? 3 : 1;
     }
 
     const datasets = [
@@ -361,8 +413,15 @@ document.addEventListener("DOMContentLoaded", function () {
         data: { labels, datasets },
         options: {
             responsive: true,
-            scales: {
-                x: { ticks: { color: "#c6c494" } },
+                        scales: {
+                x: {
+                    ticks: {
+                        color: function(context) {
+                            const label = context.tick.label;
+                            return label === bestModelName ? "#fff3b0" : "#c6c494";
+                        }
+                    }
+                },
                 y: { ticks: { color: "#c6c494" } }
             },
             plugins: {

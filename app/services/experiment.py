@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", message=".*matmul.*", category=RuntimeWarning)
 # Modeļu būvēšana un prognozēšana
 from .models import build_logreg_sgd, build_random_forest, build_xgboost_like, fit_and_predict
 
-def run_experiment(df_norm: pd.DataFrame, lottery: str, window: int = 1, split_ratio: str = "70_30"):
+def run_experiment(df_norm: pd.DataFrame, lottery: str, split_ratio: str = "70_30"):
     # Izpilda eksperimentu ar trim modeļiem (LogReg, RandomForest, XGBoost-like)
     # Izmanto lagged features: prev_vec -> curr_vec
     # Atgriež metrikas un informāciju par treniņu/testu periodiem
@@ -101,12 +101,127 @@ def run_experiment(df_norm: pd.DataFrame, lottery: str, window: int = 1, split_r
             "train_date_to": train_date_to,
             "test_date_from": test_date_from,
             "test_date_to": test_date_to,
-            "window": int(window),
             "split_ratio": split_ratio,
         }
         results.append(res)
 
     return results
+
+def summarize_experiment_results(results: list[dict]) -> dict | None:
+    # Veido kopsavilkumu par labāko rezultātu pašreizējā eksperimenta ietvaros
+    # Atgriež:
+    # - labāko modeli katrai metrikai
+    # - kopējo labāko modeli pēc rangu summas
+    # - split informāciju
+    # - labākā varianta metriku vērtības
+
+    if not results:
+        return None
+
+    # Drošības filtrs: ņem tikai korektas rindas ar visām vajadzīgajām metrikām
+    valid_results = []
+    for row in results:
+        if (
+            "model" in row
+            and "logloss" in row
+            and "brier" in row
+            and "hit_k_main" in row
+            and "hit_10" in row
+        ):
+            valid_results.append(row)
+
+    if not valid_results:
+        return None
+
+    # Labākie pēc atsevišķām metrikām
+    best_logloss = min(valid_results, key=lambda r: r["logloss"])
+    best_brier = min(valid_results, key=lambda r: r["brier"])
+    best_hit_k_main = max(valid_results, key=lambda r: r["hit_k_main"])
+    best_hit_10 = max(valid_results, key=lambda r: r["hit_10"])
+
+    # Rangi katrai metrikai
+    ranked_logloss = sorted(valid_results, key=lambda r: r["logloss"])
+    ranked_brier = sorted(valid_results, key=lambda r: r["brier"])
+    ranked_hit_k_main = sorted(valid_results, key=lambda r: r["hit_k_main"], reverse=True)
+    ranked_hit_10 = sorted(valid_results, key=lambda r: r["hit_10"], reverse=True)
+
+    # Summē rangu vietas katram modelim
+    rank_sums: dict[str, int] = {}
+
+    for idx, row in enumerate(ranked_logloss, start=1):
+        rank_sums[row["model"]] = rank_sums.get(row["model"], 0) + idx
+
+    for idx, row in enumerate(ranked_brier, start=1):
+        rank_sums[row["model"]] = rank_sums.get(row["model"], 0) + idx
+
+    for idx, row in enumerate(ranked_hit_k_main, start=1):
+        rank_sums[row["model"]] = rank_sums.get(row["model"], 0) + idx
+
+    for idx, row in enumerate(ranked_hit_10, start=1):
+        rank_sums[row["model"]] = rank_sums.get(row["model"], 0) + idx
+
+    # Atrod kopējo labāko modeli pēc mazākās rangu summas
+    best_overall = min(valid_results, key=lambda r: rank_sums.get(r["model"], 10**9))
+    best_model_name = best_overall["model"]
+
+    metric_ranks = {
+        "logloss": next(
+            idx for idx, row in enumerate(ranked_logloss, start=1)
+            if row["model"] == best_model_name
+        ),
+        "brier": next(
+            idx for idx, row in enumerate(ranked_brier, start=1)
+            if row["model"] == best_model_name
+        ),
+        "hit_k_main": next(
+            idx for idx, row in enumerate(ranked_hit_k_main, start=1)
+            if row["model"] == best_model_name
+        ),
+        "hit_10": next(
+            idx for idx, row in enumerate(ranked_hit_10, start=1)
+            if row["model"] == best_model_name
+        ),
+    }
+
+    summary = {
+        "best_by_metric": {
+            "logloss": {
+                "model": best_logloss["model"],
+                "value": float(best_logloss["logloss"]),
+            },
+            "brier": {
+                "model": best_brier["model"],
+                "value": float(best_brier["brier"]),
+            },
+            "hit_k_main": {
+                "model": best_hit_k_main["model"],
+                "value": float(best_hit_k_main["hit_k_main"]),
+            },
+            "hit_10": {
+                "model": best_hit_10["model"],
+                "value": float(best_hit_10["hit_10"]),
+            },
+        },
+        "best_overall": {
+            "model": best_overall["model"],
+            "rank_sum": int(rank_sums[best_model_name]),
+            "metric_ranks": metric_ranks,
+            "logloss": float(best_overall["logloss"]),
+            "brier": float(best_overall["brier"]),
+            "hit_k_main": float(best_overall["hit_k_main"]),
+            "hit_10": float(best_overall["hit_10"]),
+            "k_main": int(best_overall["k_main"]),
+            "split_ratio": best_overall["split_ratio"],
+            "train_rows": int(best_overall["train_rows"]),
+            "test_rows": int(best_overall["test_rows"]),
+            "train_date_from": best_overall["train_date_from"],
+            "train_date_to": best_overall["train_date_to"],
+            "test_date_from": best_overall["test_date_from"],
+            "test_date_to": best_overall["test_date_to"],
+        },
+    }
+
+    return summary
 
 def _prepare_lagged_features(df_norm: pd.DataFrame, max_num: int) -> pd.DataFrame:
     # Pārvērš katru izlozi par one-hot vektoru (garums = max_num)

@@ -66,7 +66,7 @@ def build_xgboost_like():
 
     if HAS_XGB:
         # Pilnais XGBoost (ja instalēts)
-        base = XGBClassifier(
+        base = XGBClassifier(            # type: ignore[operator]
             objective="binary:logistic",
             eval_metric="logloss",
             n_estimators=100,

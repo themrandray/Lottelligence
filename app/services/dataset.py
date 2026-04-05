@@ -6,7 +6,6 @@ from itertools import combinations
 # Tas palīdz saprast, ka fails ir RAW un pirms izmantošanas tas jāapstrādā īpašā veidā
 RAW_COLUMNS = ["Izlozes Nr.", "Datums", "Izlozētie skaitļi"]
 
-
 def read_table(path: Path) -> pd.DataFrame:
     # Nolasa CSV vai Excel failu, automātiski nosakot formātu pēc paplašinājuma
     # Šī funkcija ļauj lietotājam izmantot dažādus failu tipus bez papildus iestatījumiem
@@ -19,13 +18,11 @@ def read_table(path: Path) -> pd.DataFrame:
     else:
         raise ValueError("Neatbalstīts faila formāts. Izmanto CSV vai XLSX")
 
-
 def is_latloto_raw(df: pd.DataFrame) -> bool:
     # Pārbauda, vai fails izskatās pēc LatLoto RAW formāta
     # Ja visas RAW_COLUMNS kolonnas ir klāt, varu droši turpināt apstrādi
 
     return all(col in df.columns for col in RAW_COLUMNS)
-
 
 def is_prepared(df: pd.DataFrame) -> bool:
     # Pārbauda, vai fails jau ir sagatavots vienotajā formātā (n1, n2... u.c.)
@@ -33,7 +30,6 @@ def is_prepared(df: pd.DataFrame) -> bool:
 
     required = ["draw_no", "date", "n1", "n2", "n3", "n4", "n5"]
     return all(col in df.columns for col in required)
-
 
 def _parse_numbers_list(text: str):
     # Pārvērš tekstu ar skaitļiem par sarakstu ar veseliem skaitļiem
@@ -58,7 +54,6 @@ def _parse_numbers_list(text: str):
             continue
     return nums
 
-
 def _parse_main_and_bonus(value):
     # Sadala skaitļu virkni galvenajos un bonusu skaitļos
     # Ja ir "+", tad pa kreisi ir galvenie skaitļi, pa labi — bonusi
@@ -78,7 +73,6 @@ def _parse_main_and_bonus(value):
 
     return mains, bonuses
 
-
 def _detect_lottery_from_numbers(main_counts, bonus_counts, max_main, max_bonus):
     # Mēģina noteikt loterijas tipu pēc datu struktūras
     
@@ -91,7 +85,6 @@ def _detect_lottery_from_numbers(main_counts, bonus_counts, max_main, max_bonus)
         return "euro"
 
     return "unknown"
-
 
 def normalize_any(df_raw: pd.DataFrame, lottery: str, file_format: str) -> pd.DataFrame:
     # Apstrādā RAW un prepared failus un pārvērš tos vienotā formātā
@@ -115,7 +108,6 @@ def normalize_any(df_raw: pd.DataFrame, lottery: str, file_format: str) -> pd.Da
     _validate_lottery_safety(df_norm, lottery)
 
     return df_norm
-
 
 def _normalize_raw(df_raw: pd.DataFrame) -> pd.DataFrame:
     # Normalizē LatLoto RAW formātu uz vienotu kolonnu struktūru
@@ -151,7 +143,6 @@ def _normalize_raw(df_raw: pd.DataFrame) -> pd.DataFrame:
     df_norm = df_norm.sort_values("date").reset_index(drop=True)
     return df_norm
 
-
 def _normalize_prepared(df_raw: pd.DataFrame) -> pd.DataFrame:
     # Apstrādā jau sagatavotu failu, nodrošinot, ka visas nepieciešamās kolonnas pastāv
     # Ja kāda kolonna trūkst, tā tiek izveidota automātiski
@@ -171,7 +162,6 @@ def _normalize_prepared(df_raw: pd.DataFrame) -> pd.DataFrame:
     df = df[cols]
     df = df.sort_values("date").reset_index(drop=True)
     return df
-
 
 def _validate_lottery_safety(df_norm: pd.DataFrame, lottery: str):
     # Šī ir drošības funkcija, kas pārbauda, vai lietotāja izvēlētais loterijas tips atbilst faktiskajiem datiem
@@ -226,6 +216,8 @@ def _validate_lottery_safety(df_norm: pd.DataFrame, lottery: str):
         raise ValueError("Nezināms loterijas tips")
     
 def get_top_numbers(df_norm, k=5):
+    # Atrod biežāk izkritušos galvenos skaitļus normalizētajos datos
+    # Rezultāts tiek sakārtots dilstošā secībā pēc biežuma
 
     counts = {}
 
@@ -244,6 +236,9 @@ def get_top_numbers(df_norm, k=5):
     return sorted_counts[:k]
 
 def get_top_combinations(df_norm, comb_size=2, top_k=5):
+    # Atrod biežāk sastopamās galveno skaitļu kombinācijas
+    # Var izvēlēties kombinācijas izmēru un parādāmo rezultātu skaitu
+
     counts = {}
 
     for _, row in df_norm.iterrows():

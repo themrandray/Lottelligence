@@ -373,6 +373,11 @@ th {
     padding: 6px 8px;
     border-bottom: 1px solid #444;
     color: #c6c494;
+    text-align: center;
+}
+
+.double-table th:first-child,
+.double-table td:first-child {
     text-align: left;
 }
 
@@ -399,4 +404,30 @@ th {
 .panel-half-header .status-bar {
     position: relative;
     left: 56px;
+}
+
+.best-summary-box {
+    margin-top: 18px;
+    padding: 14px;
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    color: #c6c494;
+}
+
+.best-summary-title {
+    margin-top: 0;
+    text-align: center;
+    color: #e0dfc7;
+}
+
+.best-summary-winner {
+    color: #ffe082;
+    font-weight: 700;
+}
+
+.results-note-box {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #c6c494;
 }
