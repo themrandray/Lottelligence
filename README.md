@@ -230,8 +230,8 @@ Lottelligence/
 │  │  └─ style.css              # UI stils
 │  └─ services/
 │     ├─ dataset.py             # datu ielāde, normalizācija, drošības pārbaudes
-│     ├─ models.py              # modeļu definīcijas (SGD, RF, XGB; ja nav pieejams - fallback boosting)
-│     └─ experiment.py          # eksperimenti: maināms train/test sadalījums, X/Y veidošana, metrikas
+│     ├─ models.py              # modeļu definīcijas (SGD, RF, XGB)
+│     └─ experiment.py          # eksperimenti: train/test sadalījums, X/Y veidošana, metrikas
 ├─ uploads/                     # dotie Eurojackpot / Viking Lotto RAW dati
 ├─ outputs/                     # ģenerētie CSV rezultāti (lokāli)
 ├─ requirements.txt             # nepieciešamās Python bibliotēkas   
@@ -286,7 +286,9 @@ Metriku aprēķins un rezultātu attēlošana
 4. **Flask interfeiss (`routes.py` + `templates/index.html`)**
    - lietotājs augšupielādē datus un izvēlas parametrus
    - sistēma palaiž eksperimentu
-   - rezultāti tiek parādīti tabulā un saglabāti CSV
+   - rezultāti tiek parādīti tabulās un diagrammā
+   - tiek izveidots kopsavilkuma bloks par labāko eksperimenta variantu
+   - rezultāti tiek saglabāti CSV failos
 
 ### Papildu analīzes funkcijas (UI)
 
