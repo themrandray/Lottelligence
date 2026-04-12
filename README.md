@@ -31,7 +31,7 @@
 - **5 pamat skaitļi** (1–50)  
 - **2 papildskaitļi** (1–12)
 
-Šobrīd modeļi tiek trenēti **tikai uz pamat skaitļiem**
+Šobrīd modeļi tiek apmācīti **tikai uz pamat skaitļiem**
 Papildskaitļi tiek nolasīti un normalizēti, bet **modeļos netiek izmantoti**
 
 ---
@@ -95,7 +95,7 @@ Sistēma pārbauda, vai lietotāja izvēlētais loterijas tips atbilst datu stru
 - ja izvēlēts `Viking Lotto`, bet failā redzams tipisks `Eurojackpot` formāts -> kļūda
 - ja skaitļi pārsniedz atļauto diapazonu (piem., Viking Lotto > 48) -> kļūda
 
-Tas novērš situāciju, kad modeļi tiek trenēti uz “nepareizu” loteriju
+Tas novērš situāciju, kad modeļi tiek apmācīti uz “nepareizu” loteriju
 ---
 
 ## Eksperimenta uzstādījums (X un Y veidošana)
@@ -128,7 +128,7 @@ Pirmā datu rinda tiek atmesta, jo tai nav definēts x(t−1) (nav iepriekšēj�
 Tādējādi veidojas multi-label binārās klasifikācijas uzdevums: katram skaitlim i tiek prognozēta varbūtība P(y_i(t)=1 | x(t−1))
 
 ### 3) Train/Test sadalījums
-Dati tiek sadalīti treniņa un testa daļās, saglabājot hronoloģisko secību.
+Dati tiek sadalīti apmācības un testa daļās, saglabājot hronoloģisko secību.
 
 Pēc noklusējuma tiek izmantots sadalījums **70/30**:
 - vecākās 70% rindas -> train  
@@ -144,7 +144,7 @@ Eksperimenta ietvaros lietotājs var izvēlēties arī citus sadalījuma variant
 - `75/25`
 - `80/20`
 
-Tas ļauj analizēt, kā modeļu metrikas mainās atkarībā no izmantotā treniņa/testa proporcijas.
+Tas ļauj analizēt, kā modeļu metrikas mainās atkarībā no izmantotā apmācības/testa proporcijas.
 Sadalījums tiek veikts hronoloģiski (bez datu jaukšanas), lai simulētu reālu prognozēšanas situāciju.
 
 ---
@@ -154,7 +154,7 @@ Sadalījums tiek veikts hronoloģiski (bez datu jaukšanas), lai simulētu reāl
 Datu ielāde un normalizācija notiek failā `app/services/dataset.py`.  
 Modeļu definīcijas ir `app/services/models.py`, bet modeļu izsaukšana un metriku aprēķins – `app/services/experiment.py`
 
-Visi modeļi tiek trenēti **multi-label** uzdevumā, izmantojot **One-Vs-Rest** pieeju:  
+Visi modeļi tiek apmācīti **multi-label** uzdevumā, izmantojot **One-Vs-Rest** pieeju:  
 katram skaitlim tiek apmācīts atsevišķs binārs klasifikators (“parādās/neparādās”), lai salīdzinājums starp modeļiem būtu godīgs un vienots
 
 Rezultātā tiek iegūta varbūtību matrica `proba` ar izmēru:
