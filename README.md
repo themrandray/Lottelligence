@@ -242,23 +242,27 @@ Lottelligence/
 
 ## Sistēmas arhitektūra
 
-```text
-Lietotājs (pārlūks)
-        │
-        ▼
-Flask interfeiss (`routes.py`, `index.html`)
-        │
-        ▼
-Datu ielāde un normalizācija (`dataset.py`)
-        │
-        ▼
-Eksperimentu loģika (`experiment.py`)
-        │
-        ▼
-Modeļi un prognožu varbūtības (`models.py`)
-        │
-        ▼
-Metriku aprēķins un rezultātu attēlošana
+```mermaid
+flowchart LR
+    A["Lietotājs (pārlūks)"]
+    B["Flask interfeiss (routes.py, index.html)"]
+    C["Datu ielāde un normalizācija (dataset.py)"]
+    D["Eksperimentu loģika (experiment.py)"]
+    E["Modeļi un prognozēto varbūtību aprēķins (models.py)"]
+    F["Metriku aprēķins un rezultātu attēlošana"]
+    G["Papildu analīzes API (top_numbers_api, top_combinations_api)"]
+    H["Biežākie skaitļi un kombinācijas (dataset.py)"]
+
+    A --> B
+    C --> D
+    D --> E
+    E --> F
+    B --> |HTTP pieprasījumi| G
+    G --> H
+    H --> |Analīze| B
+    B -->|HTTP pieprasījumi| C
+    F -->|Rezultāti| B
+    B -->|UI attēlojums| A
 ```
 
 ---
