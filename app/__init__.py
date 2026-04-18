@@ -7,15 +7,15 @@ def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = "lottelligence-secret-key"
 
-    # Jinja filter: format dates as dd.mm.yyyy
+    # Jinja filtrs: datumu formatēšana kā dd.mm.yyyy
     @app.template_filter("ddmmyyyy")
     def ddmmyyyy(value):
         if value is None:
             return ""
-        # datetime/date objects
+        # datetime/date objekti
         if hasattr(value, "strftime"):
             return value.strftime("%d.%m.%Y")
-        # strings like "YYYY-MM-DD" or "YYYY-MM-DD ..."
+        # virknes formātā "YYYY-MM-DD" vai "YYYY-MM-DD"
         s = str(value)[:10]
         try:
             return datetime.strptime(s, "%Y-%m-%d").strftime("%d.%m.%Y")
